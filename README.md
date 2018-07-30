@@ -1,22 +1,34 @@
-# .
+# openGL
 
-TODO: Write a description here
+Implement openGL bindings in Crystal
 
 ## Installation
 
-TODO: Write installation instructions here
+Installing crystal with homebrew (macOS)
+```bash
+# Install homebrew (If you dont have it)
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+# Update brew
+brew update
+
+# Install crystal
+brew install crystal-lang
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+```bash
+crystal src/main.cr
+```
 
 ## Development
 
-TODO: Write development instructions here
+Lots of things. Currently renders from pre-made in `src/models/`. Working on getting loading from `.obj` files
 
 ## Contributing
 
-1. Fork it (<https://github.com/your-github-user/./fork>)
+1. Fork it (<https://github.com/langee99/openGL/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
@@ -24,4 +36,4 @@ TODO: Write development instructions here
 
 ## Contributors
 
-- [your-github-user](https://github.com/your-github-user) Eric Lange - creator, maintainer
+- [langee99](https://github.com/langee99) Eric Lange - creator, maintainer
