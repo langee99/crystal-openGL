@@ -22,9 +22,20 @@ brew install crystal-lang
 crystal src/main.cr
 ```
 
+```
+Key bindings:
+  - Mouse movements => Camera Look
+  - WASD/Arrow keys => Camera Movement
+  - Z => Increase FoV
+  - X => Decrease FoV
+  - C => Toggle Culling
+  - F => Draw Mode (Fill or Line)
+  - ESC => Quit
+```
+
 ## Development
 
-Lots of things. Currently renders from pre-made in `src/models/`. Working on getting loading from `.obj` files
+Lots of things. Currently renders a cube from `src/models/cube_tex.cr`. Other `*.cr` models should theoretically work with some changes. Working on getting loading from `.obj` files
 
 ## Contributing
 
