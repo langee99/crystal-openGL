@@ -19,12 +19,17 @@ class Main
   @vert : Array(GLM::Vec3)
   @uv : Array(GLM::Vec2)
   @normal : Array(GLM::Vec3)
+
   @last_time = GLFW.get_time()
+  @speed = 13.0_f32
+  @angle = 45.0_f32
 
   # Draw mode
   @mode = "FILL"
   # Cull triangles which normal is not towards camera (Keeps drawing/rendering to only what's being shown)
   @cull = true
+  # Should we be spinning?
+  @spin = true
 
   def initialize
     unless GLFW.init
@@ -135,8 +140,8 @@ class Main
     # uv buffer
     LibGL.gen_buffers(1_f32, out @uv_buffer)
     LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @uv_buffer)
-    # LibGL.buffer_data(LibGL::ARRAY_BUFFER, @model.uv.size * sizeof(Float32), @model.uv.to_unsafe, LibGL::STATIC_DRAW)
-    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @uv.size * sizeof(GLM::Vec2), (@uv.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
+    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @model.uv.size * sizeof(Float32), @model.uv.to_unsafe, LibGL::STATIC_DRAW)
+    # LibGL.buffer_data(LibGL::ARRAY_BUFFER, @uv.size * sizeof(GLM::Vec2), (@uv.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
 
     run
   end
@@ -169,6 +174,15 @@ class Main
           end
         end
       end
+      if (GLFW.get_key(@window, GLFW::KEY_V) == GLFW::PRESS)
+        if (GLFW.get_key(@window, GLFW::KEY_V) == GLFW::RELEASE)
+          if @spin
+            @spin = false
+          else
+            @spin = true
+          end
+        end
+      end
       break if GLFW.get_key(@window, GLFW::KEY_ESCAPE) == GLFW::PRESS && GLFW.window_should_close(@window)
     end
 
@@ -181,6 +195,10 @@ class Main
   end
 
   def render
+    current_time = GLFW.get_time
+    delta_time = current_time - @last_time
+    @last_time = current_time
+
     # Clear the screen
     LibGL.clear(LibGL::COLOR_BUFFER_BIT | LibGL::DEPTH_BUFFER_BIT)
 
@@ -192,7 +210,13 @@ class Main
     projection_matrix = @controller.projection_matrix
     view_matrix = @controller.view_matrix
     model_matrix = GLM::Mat4.identity # Identity matrix
-    @mvp = projection_matrix * view_matrix * model_matrix
+
+    # If we should be spinning calculate new angle
+    if @spin
+      @angle += Math.sin(@speed) * delta_time
+    end
+
+    @mvp = GLM.rotate(projection_matrix * view_matrix * model_matrix, @angle, GLM.vec3(1, 1, 1))
 
     # Send our transform to the currently bound shader,
     # in the "MVP" uniform

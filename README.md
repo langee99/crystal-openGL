@@ -12,8 +12,8 @@ Installing crystal with homebrew (macOS)
 # Update brew
 brew update
 
-# Install crystal
-brew install crystal-lang
+# Install crystal, glfw, and glew
+brew install crystal glfw glew
 ```
 
 ## Usage
@@ -30,6 +30,7 @@ Key bindings:
   - X => Decrease FoV
   - C => Toggle Culling
   - F => Draw Mode (Fill or Line)
+  - V => Toggle Spinning
   - ESC => Quit
 ```
 
@@ -39,7 +40,7 @@ Lots of things. Currently renders a cube from `src/models/cube_tex.cr`. Other `*
 
 ## Contributing
 
-1. Fork it (<https://github.com/langee99/openGL/fork>)
+1. Fork it (<https://github.com/langee99/openGL-crystal/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

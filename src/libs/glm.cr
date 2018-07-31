@@ -213,6 +213,12 @@ module GLM
       m
     end
 
+    def self.new(x, y, z, w)
+      m = zero
+      m[0], m[5], m[10], m[15] = x, y, z, w
+      m
+    end
+
     def self.new_with_row_col(&block : (Int32, Int32) -> T)
       m = TMat4(T).new
       p = m.buffer
