@@ -16,6 +16,9 @@ class Main
   @program : GL::ShaderProgram
   @mvp : GLM::TMat4(Float32)
   @texture : LibGL::Uint
+  @vert : Array(GLM::Vec3)
+  @uv : Array(GLM::Vec2)
+  @normal : Array(GLM::Vec3)
 
   @last_time = GLFW.get_time()
   @speed = 13.0_f32
@@ -94,19 +97,33 @@ class Main
     # Load textures
     @texture = Loaders.load_bmp(BMP_LOC)
     @texture_id = LibGL.get_uniform_location(@program.program_id, "myTextureSampler")
+    @vert, @uv, @normal = Loaders.load_obj("./src/models/test.obj")
 
     # Our model. Contains verticites and color data
     @model = Cube.new
+
+    @vert.each_with_index do |x, i|
+      puts "Vert #{i}"
+      puts "\tx: #{x.x}"
+      puts "\ty: #{x.y}"
+      puts "\tz: #{x.z}"
+    end
 
     # Vertex buffer
     LibGL.gen_buffers(1_f32, out @vertex_buffer)
     LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @vertex_buffer)
     LibGL.buffer_data(LibGL::ARRAY_BUFFER, @model.vertices.size * sizeof(Float32), @model.vertices.to_unsafe, LibGL::STATIC_DRAW)
 
+    # @TODO: MAKE ME WORK GDI
+    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @vert.size * sizeof(GLM::Vec3), (@vert.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
+
     # uv buffer
     LibGL.gen_buffers(1_f32, out @uv_buffer)
     LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @uv_buffer)
-    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @model.uv.size * sizeof(Float32), @model.uv.to_unsafe, LibGL::STATIC_DRAW)
+    # LibGL.buffer_data(LibGL::ARRAY_BUFFER, @model.uv.size * sizeof(Float32), @model.uv.to_unsafe, LibGL::STATIC_DRAW)
+
+    # @TODO: MAKE ME WORK GDI
+    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @uv.size * sizeof(GLM::Vec2), (@uv.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
 
     run
   end
@@ -206,7 +223,7 @@ class Main
     LibGL.vertex_attrib_pointer(1, 2, LibGL::FLOAT, LibGL::FALSE, 0, Pointer(Void).new(0))
 
     # Draw the triangle
-    LibGL.draw_arrays(LibGL::TRIANGLES, 0, 12 * 3)
+    LibGL.draw_arrays(LibGL::TRIANGLES, 0, @vert.size)
 
     LibGL.disable_vertex_attrib_array(0)
     LibGL.disable_vertex_attrib_array(1)

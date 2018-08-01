@@ -83,5 +83,13 @@ class Controller
       @fov -= 1
       puts "FOV: #{@fov}"
     end
+
+    if (GLFW.get_key(@window, GLFW::KEY_SPACE) === GLFW::PRESS)
+      @position += right.cross(direction) * delta_time * @speed
+    end
+
+    if (GLFW.get_key(@window, GLFW::KEY_B) === GLFW::PRESS)
+      @position -= right.cross(direction) * delta_time * @speed
+    end
   end
 end

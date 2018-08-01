@@ -5,8 +5,8 @@ authors:
   - Eric Lange <elange99@gmail.com>
 
 targets:
-  .:
-    main: src/..cr
+  openGL_test:
+    main: src/main.cr
 
 crystal: 0.25.1
 

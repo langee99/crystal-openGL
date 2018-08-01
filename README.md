@@ -19,6 +19,7 @@ brew install crystal glfw glew
 ## Usage
 
 ```bash
+# Run the basic implementation
 crystal src/main.cr
 ```
 
@@ -26,6 +27,8 @@ crystal src/main.cr
 Key bindings:
   - Mouse movements => Camera Look
   - WASD/Arrow keys => Camera Movement
+  - Space Bar => Move Up (Y direction)
+  - B => Move Down (Y direction)
   - Z => Increase FoV
   - X => Decrease FoV
   - C => Toggle Culling
