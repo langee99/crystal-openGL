@@ -85,16 +85,16 @@ module GLM
       self / length
     end
 
-    def dot(v : TVec2(T))
-      x * v.x + y * v.y
-    end
-
     def buffer
       @buffer
     end
 
     def to_unsafe
       @buffer
+    end
+
+    def to_a
+      [@buffer[0], @buffer[1]]
     end
   end
 
@@ -188,6 +188,10 @@ module GLM
 
     def dot(v : TVec3(T))
       x * v.x + y * v.y + z * v.z
+    end
+
+    def to_a
+      [@buffer[0], @buffer[1], @buffer[2]]
     end
   end
 

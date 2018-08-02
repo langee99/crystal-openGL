@@ -1,15 +1,14 @@
-require "./libs/gl"
-require "./libs/glew"
-require "./libs/glfw"
-require "./libs/glm"
-require "./libs/soil"
-require "./models/triangle"
-require "./models/cube_tex"
-require "./common/controller"
-require "./common/loaders"
+require "../../src/libs/gl"
+require "../../src/libs/glew"
+require "../../src/libs/glfw"
+require "../../src/libs/glm"
+require "../../src/libs/soil"
+require "../../src/models/triangle"
+require "../../src/common/controller"
+require "../../src/common/loaders"
 
-VERTEX_SHADER_LOC = "src/shaders/transform_vertex_shader.glsl"
-FRAGMENT_SHADER_LOC = "src/shaders/texture_fragment_shader.glsl"
+VERTEX_SHADER_LOC = "./tutorials/tut_8/shaders/standard_shading.glsl"
+FRAGMENT_SHADER_LOC = "./tutorials/tut_8/shaders/standard_shading_fragment.glsl"
 BMP_LOC = "src/bmps/uvtemplate.bmp"
 
 class Main
@@ -22,14 +21,14 @@ class Main
 
   @last_time = GLFW.get_time()
   @speed = 13.0_f32
-  @angle = 45.0_f32
+  @angle = 0.0_f32
 
   # Draw mode
   @mode = "FILL"
   # Cull triangles which normal is not towards camera (Keeps drawing/rendering to only what's being shown)
   @cull = true
   # Should we be spinning?
-  @spin = true
+  @spin = false
 
   def initialize
     unless GLFW.init
@@ -91,39 +90,52 @@ class Main
 
     # Get a handle for our "MVP"
     @matrix_id = LibGL.get_uniform_location(@program.program_id, "MVP")
+    @view_matrix_id = LibGL.get_uniform_location(@program.program_id, "V")
+    @model_matrix_id = LibGL.get_uniform_location(@program.program_id, "M")
 
     @mvp = GLM::Mat4.identity
 
     # Load textures
     @texture = Loaders.load_bmp(BMP_LOC)
     @texture_id = LibGL.get_uniform_location(@program.program_id, "myTextureSampler")
-    @vert, @uv, @normal = Loaders.load_obj("./src/models/test.obj")
+    @vert, @uv, @normal = Loaders.load_obj("./src/models/suzanne.obj")
 
-    # Our model. Contains verticites and color data
-    @model = Cube.new
-
-    @vert.each_with_index do |x, i|
-      puts "Vert #{i}"
-      puts "\tx: #{x.x}"
-      puts "\ty: #{x.y}"
-      puts "\tz: #{x.z}"
-    end
+    # @TODO: Figure out a way to get this to work without converting GLM::Vec3 and GLM::Vec2
+    #   into an array to get this to work
+    mapped_vert = [] of Float32
+    mapped_uv = [] of Float32
+    mapped_normal = [] of Float32
+    @vert.each { |x| mapped_vert.concat x.to_a }
+    @uv.each { |x| mapped_uv.concat x.to_a }
+    @normal.each { |x| mapped_normal.concat x.to_a }
 
     # Vertex buffer
     LibGL.gen_buffers(1_f32, out @vertex_buffer)
     LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @vertex_buffer)
-    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @model.vertices.size * sizeof(Float32), @model.vertices.to_unsafe, LibGL::STATIC_DRAW)
+    LibGL.buffer_data(LibGL::ARRAY_BUFFER, mapped_vert.size * sizeof(Float32), mapped_vert.to_unsafe, LibGL::STATIC_DRAW)
 
     # @TODO: MAKE ME WORK GDI
-    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @vert.size * sizeof(GLM::Vec3), (@vert.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
+    # LibGL.buffer_data(LibGL::ARRAY_BUFFER, @vert.size * sizeof(GLM::Vec3), (@vert.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
 
     # uv buffer
     LibGL.gen_buffers(1_f32, out @uv_buffer)
     LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @uv_buffer)
-    # LibGL.buffer_data(LibGL::ARRAY_BUFFER, @model.uv.size * sizeof(Float32), @model.uv.to_unsafe, LibGL::STATIC_DRAW)
+    LibGL.buffer_data(LibGL::ARRAY_BUFFER, mapped_uv.size * sizeof(Float32), mapped_uv.to_unsafe, LibGL::STATIC_DRAW)
 
     # @TODO: MAKE ME WORK GDI
-    LibGL.buffer_data(LibGL::ARRAY_BUFFER, @uv.size * sizeof(GLM::Vec2), (@uv.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
+    # LibGL.buffer_data(LibGL::ARRAY_BUFFER, @uv.size * sizeof(GLM::Vec2), (@uv.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
+
+    # normal buffer
+    LibGL.gen_buffers(1_f32, out @normal_buffer)
+    LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @normal_buffer)
+    LibGL.buffer_data(LibGL::ARRAY_BUFFER, mapped_normal.size * sizeof(Float32), mapped_normal.to_unsafe, LibGL::STATIC_DRAW)
+
+    # @TODO: MAKE ME WORK GDI
+    # LibGL.buffer_data(LibGL::ARRAY_BUFFER, @normal.size * sizeof(GLM::Vec3), (@normal.to_unsafe.as Pointer(Void)), LibGL::STATIC_DRAW)
+
+    # Get a handle for our LightPosition uniform
+    @program.use
+    @light_id = LibGL.get_uniform_location(@program.program_id, "LightPosition_worldspace")
 
     run
   end
@@ -172,6 +184,7 @@ class Main
     # Cleanup
     LibGL.disable_vertex_attrib_array 0_u32
     LibGL.disable_vertex_attrib_array 1_u32
+    LibGL.disable_vertex_attrib_array 2_u32
 
     # Close OpenGL window
     GLFW.terminate
@@ -204,6 +217,11 @@ class Main
     # Send our transform to the currently bound shader,
     # in the "MVP" uniform
     LibGL.uniform_matrix_4fv(@matrix_id, 1, LibGL::FALSE, @mvp.buffer)
+    LibGL.uniform_matrix_4fv(@model_matrix_id, 1, LibGL::FALSE, model_matrix.buffer)
+    LibGL.uniform_matrix_4fv(@view_matrix_id, 1, LibGL::FALSE, view_matrix.buffer)
+
+    light_pos = GLM.vec3(4, 4, 4)
+    LibGL.uniform_3f(@light_id, light_pos.x, light_pos.y, light_pos.z)
 
     # Bind texture in texture unit 0
     LibGL.active_texture(LibGL::TEXTURE0)
@@ -222,11 +240,17 @@ class Main
     LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @uv_buffer)
     LibGL.vertex_attrib_pointer(1, 2, LibGL::FLOAT, LibGL::FALSE, 0, Pointer(Void).new(0))
 
+    # 3rd attribute buffter: Normals
+    LibGL.enable_vertex_attrib_array(2)
+    LibGL.bind_buffer(LibGL::ARRAY_BUFFER, @normal_buffer)
+    LibGL.vertex_attrib_pointer(2, 3, LibGL::FLOAT, LibGL::FALSE, 0, Pointer(Void).new(0))
+
     # Draw the triangle
     LibGL.draw_arrays(LibGL::TRIANGLES, 0, @vert.size)
 
     LibGL.disable_vertex_attrib_array(0)
     LibGL.disable_vertex_attrib_array(1)
+    LibGL.disable_vertex_attrib_array(2)
 
     # Swap buffers
     GLFW.swap_buffers(@window)
